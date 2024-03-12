@@ -1,0 +1,387 @@
+Program.Sub.ScreenSU.Start
+Gui.frmPartBomRouterDelete..create
+Gui.frmPartBomRouterDelete..caption("Part / BOM / Router Delete")
+Gui.frmPartBomRouterDelete..size(9600,6270)
+Gui.frmPartBomRouterDelete..minx(0)
+Gui.frmPartBomRouterDelete..miny(0)
+Gui.frmPartBomRouterDelete..position(0,0)
+Gui.frmPartBomRouterDelete..event(UnLoad,frmpartbomrouterdelete_unload)
+Gui.frmPartBomRouterDelete..forecolor(0)
+Gui.frmPartBomRouterDelete..fontstyle(,)
+Gui.frmPartBomRouterDelete..BackColor(-2147483633)
+Gui.frmPartBomRouterDelete..mousepointer(0)
+Gui.frmPartBomRouterDelete.cmdDelete.create(button)
+Gui.frmPartBomRouterDelete.cmdDelete.caption("Delete")
+Gui.frmPartBomRouterDelete.cmdDelete.size(855,375)
+Gui.frmPartBomRouterDelete.cmdDelete.position(245,5200)
+Gui.frmPartBomRouterDelete.cmdDelete.event(Click,cmddelete_click)
+Gui.frmPartBomRouterDelete.cmdDelete.defaultvalue("")
+Gui.frmPartBomRouterDelete.gsgcParts.Create(GsGridControl)
+Gui.frmPartBomRouterDelete.gsgcParts.Size(8910,4275)
+Gui.frmPartBomRouterDelete.gsgcParts.Position(255,660)
+Gui.frmPartBomRouterDelete.gsgcParts.Event(RowCellClick,gsgcParts_RowCellClick)
+Gui.frmPartBomRouterDelete.cmdCheckAll.Create(Button)
+Gui.frmPartBomRouterDelete.cmdCheckAll.Size(1110,375)
+Gui.frmPartBomRouterDelete.cmdCheckAll.Position(270,105)
+Gui.frmPartBomRouterDelete.cmdCheckAll.Caption("Check All")
+Gui.frmPartBomRouterDelete.cmdCheckAll.Event(Click,cmdCheckAll_Click)
+Gui.frmPartBomRouterDelete.cmdUncheckAll.Create(Button)
+Gui.frmPartBomRouterDelete.cmdUncheckAll.Size(1080,375)
+Gui.frmPartBomRouterDelete.cmdUncheckAll.Position(1725,105)
+Gui.frmPartBomRouterDelete.cmdUncheckAll.Caption("Uncheck All")
+Gui.frmPartBomRouterDelete.cmdUncheckAll.Event(Click,cmdUncheckAll_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass,240)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+V.Global.lImportRowCount.Declare(Long)
+V.Global.sparent.Declare(String)
+V.Local.sLastDate.Declare(string)
+v.Local.dLastDate.Declare(Date)
+v.Local.i.Declare(long)
+
+f.Intrinsic.Control.If(v.DataTable.dt.Exists,=,true)
+	f.Data.DataTable.Close("dt")
+f.Intrinsic.Control.EndIf
+v.Local.ssql.Declare(string,"select CONVERT(0,SQL_BIT) AS 'Select', PART, DESCRIPTION, PRODUCT_LINE,UM_INVENTORY AS 'UM', QTY_ONHAND, date_last_usage, who_chg_last from V_INVENTORY_ALL WHERE FLAG_INACTIVE='Y' ORDER BY PART")
+f.Data.DataTable.CreateFromSQL("dt","con",v.Local.ssql,true)
+
+
+F.ODBC.Connection!Con.ExecuteAndReturn("SELECT COUNT(*) AS TOTAL FROM V_INVENTORY_MSTR WHERE FLAG_INACTIVE='Y'",V.Global.lImportRowCount)
+f.Intrinsic.Math.Sub(v.Global.lImportRowCount,1,v.Global.lImportRowCount)
+GUI.frmPartBomRouterDelete.gsgcParts.DataSource("dt")
+gui.frmPartBomRouterDelete.gsgcParts.AddGridviewFromDatatable("gv","dt")
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","Select","ReadOnly","False")
+
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","Part","AllowEdit","False")
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","Part","ReadOnly","True")
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","Part","CELLFORECOLOR","Blue")
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","QTY_ONHAND","AllowEdit","False")
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","QTY_ONHAND","ReadOnly","True")
+gui.frmPartBomRouterDelete.gsgcParts.setcolumnproperty("gv","QTY_ONHAND","CELLFORECOLOR","Blue")
+
+'F.ODBC.Connection!con.OpenLocalRecordsetRW("rs","select ' ' AS BLANK, PART,DESCRIPTION, PRODUCT_LINE,UM_INVENTORY,QTY_ONHAND from V_INVENTORY_MSTR WHERE FLAG_INACTIVE='Y' ORDER BY PART")
+Gui.frmPartBomRouterDelete..Show
+gui.frmPartBomRouterDelete.gsgcParts.anchor(15)
+gui.frmPartBomRouterDelete.cmdDelete.anchor(6)
+
+Program.Sub.Main.End
+
+Program.Sub.cmddelete_click.Start
+V.Local.lvalue.Declare(Long)
+V.Local.bvalue.Declare(boolean)
+V.Local.spart.Declare(String)
+V.Local.i.Declare(Long)
+V.Local.sstring.Declare(String)
+V.Local.squery.Declare(String)
+F.Intrinsic.UI.Msgbox("Are you sure you want to delete the Part, Router, and BOM for these parts?","Are you sure?",4,V.Local.lvalue)
+V.Local.sd0.Declare(String)
+V.Local.sd1.Declare(String)
+V.Local.sd2.Declare(String)
+V.Local.sd3.Declare(String)
+V.Local.sd4.Declare(String)
+V.Local.sd5.Declare(String)
+V.Local.sd6.Declare(String)
+V.Local.sd7.Declare(String)
+V.Local.sd8.Declare(String)
+V.Local.sd9.Declare(String)
+V.Local.smsg.Declare(String)
+
+V.Local.i.Set(0)
+F.Intrinsic.Control.If(V.Local.lvalue,=,6)
+	F.Intrinsic.UI.InvokeWaitDialog("Please Wait")
+	F.Intrinsic.Control.For(V.Local.i,V.Local.i,V.Global.lImportRowCount,1)
+		v.Local.bvalue.Set(v.DataTable.dt(v.local.i).Select!Fieldval)
+		v.Local.spart.Set(v.DataTable.dt(v.local.i).Part!Fieldval)
+
+		F.intrinsic.control.if(V.local.bvalue,=,true)
+			'Backup Part
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.String.Concat("INSERT INTO GAB_4737_INV_MST1 SELECT * FROM INVENTORY_MSTR WHERE PART='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.String.Concat("INSERT INTO GAB_4737_INV_MST2 SELECT * FROM INVENTORY_MST2 WHERE PART='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.String.Concat("INSERT INTO GAB_4737_INV_MST3 SELECT * FROM INVENTORY_MST3 WHERE PART='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Part
+			'broken here....
+			f.Intrinsic.Control.Try
+				F.Intrinsic.String.Concat(V.caller.companycode,"!*!D!*!N!*!*!*ZDR*!*!*!",V.Local.spart,"!*!*!*ZDR*!*",V.Local.sstring)
+				F.Global.General.CallWrapperSync(3500,V.Local.sstring)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router Header
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.String.Concat("INSERT INTO GAB_4737_RTR_HDR SELECT * FROM ROUTER_HEADER WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router Header
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.String.Concat("DELETE FROM ROUTER_HEADER WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router Line
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"INSERT INTO GAB_4737_RTR_LINE SELECT * FROM ROUTER_LINE WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router Line
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"DELETE FROM ROUTER_LINE WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router Description
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"INSERT INTO GAB_4737_RTR_DESC SELECT * FROM ROUTER_DESC WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router Description
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"DELETE FROM ROUTER_DESC WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router Changes
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"INSERT INTO GAB_4737_RTR_CHG  SELECT * FROM ROUTER_CHANGES WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router Changes
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"DELETE FROM ROUTER_CHANGES WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router Op Codes
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"INSERT INTO GAB_4737_RTR_OPC SELECT * FROM ROUTER_OP_CODES WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router Op Codes
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"DELETE FROM ROUTER_OP_CODES WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router Supp
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"INSERT INTO GAB_4737_RTR_SUPP SELECT * FROM ROUTER_SUPP WHERE RTR_NUM='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router Supp
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"DELETE FROM ROUTER_SUPP WHERE RTR_NUM='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup Router XRef
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"INSERT INTO GAB_4737_RTR_XREF SELECT * FROM ROUTER_XREF WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Delete Router XRef
+			f.Intrinsic.Control.Try
+				V.Local.squery.Set("")
+				F.Intrinsic.string.Concat(V.local.squery,"DELETE FROM ROUTER_XREF WHERE ROUTER='",V.Local.spart,"'",V.Local.squery)
+				F.ODBC.Connection!con.Execute(V.Local.squery)
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+			'Backup BOM MSTR
+			f.Intrinsic.Control.Try
+				v.Local.squery.Set("")
+				F.Intrinsic.String.Concat("select A.PARENT, A.PART, A.QUANTITY, A.UM_INVENTORY, A.INACTIVE,A.DRAWING_SIZE, B.DESCRIPTION, A.SEQUENCE_BOM, ('1') as LEVEL, A.SOURCE  ",V.Local.squery,V.Local.squery)
+				F.Intrinsic.String.Concat(V.Local.squery,"from BOM_MSTR  AS A ",V.Local.squery)
+				F.Intrinsic.String.Concat(V.Local.squery,"LEFT OUTER JOIN BOM_ENG AS B ",V.Local.squery)
+				F.Intrinsic.String.Concat(V.Local.squery," ON A.PART = B.PART",V.Local.squery)
+				F.Intrinsic.String.Concat(V.Local.squery," where parent='",V.local.spart,"'",V.Local.squery)
+				'F.Intrinsic.String.Concat(V.Local.squery," AND A.PARENT<>B.PART ",V.Local.squery)
+				F.ODBC.Connection!con.OpenRecordsetRW("rsBOMStart",V.Local.squery)
+				V.Global.sparent.Set(V.local.spart)
+				F.Intrinsic.String.Trim(V.Global.sparent,V.Global.sparent)
+				F.Intrinsic.String.Concat("INSERT INTO GAB_4737_BOM_MSTR SELECT * FROM BOM_MSTR WHERE PARENT='",V.Global.sparent,"' AND PART='",V.Local.spart,"'",V.Local.sd0)
+				F.ODBC.Connection!con.EXECUTE(V.Local.SD0)
+				V.Local.sd0.Set("")
+			f.Intrinsic.Control.Catch
+				'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+			f.Intrinsic.Control.EndTry
+
+			
+			'Loop through the BOM
+				F.Intrinsic.Control.DoUntil(V.ODBC.con!rsBOMStart.eof,=,True)
+					F.Intrinsic.Control.If(V.ODBC.con!rsBOMStart.EOF,<>,True)
+						
+						V.Global.sparent.Set(V.odbc.Con!rsBOMStart.FieldVal!parent)
+						F.Intrinsic.String.Trim(V.Global.sparent,V.Global.sparent)
+						
+						'Backup BOM MSTR
+						f.Intrinsic.Control.Try
+							V.Local.sd1.Set("")
+							F.Intrinsic.String.Concat("INSERT INTO GAB_4737_BOM_MSTR SELECT * FROM BOM_MSTR WHERE PARENT='",V.local.spart,"'",V.Local.sd1)
+							F.ODBC.Connection!con.EXECUTE(V.Local.sd1)
+						f.Intrinsic.Control.Catch
+							''f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+						f.Intrinsic.Control.EndTry
+						'Delete BOM MSTR
+						f.Intrinsic.Control.Try
+							V.Local.sd1.Set("")
+							F.Intrinsic.String.Concat(V.local.sd1," DELETE ",V.Local.sd1)
+							F.Intrinsic.String.Concat(V.Local.sd1," from BOM_MSTR  ",V.Local.sd1)
+							F.Intrinsic.String.Concat(V.Local.sd1," where parent='",V.local.spart,"'",V.Local.sd1)
+							'F.Intrinsic.String.Concat(V.Local.sd1," AND PART='",V.local.spart,"' ",V.ambient.newline,V.Local.sd1)
+							F.ODBC.Connection!con.execute(V.Local.SD1)
+						f.Intrinsic.Control.Catch
+							''f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+						f.Intrinsic.Control.EndTry
+						'BACKUP BOM ENG
+						f.Intrinsic.Control.Try
+							V.Local.sd1.Set("")
+							F.Intrinsic.String.Concat("INSERT INTO GAB_4737_BOM_ENG SELECT * FROM BOM_ENG WHERE PART='",V.Local.spart,"'",V.Local.sd1)
+							F.ODBC.Connection!con.EXECUTE(V.Local.sd1)
+						f.Intrinsic.Control.Catch
+							'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+						f.Intrinsic.Control.EndTry
+						'DELETE BOM ENG
+						f.Intrinsic.Control.Try
+							V.Local.sd1.Set("")
+							F.Intrinsic.String.Concat(V.local.sd1," DELETE ",V.Local.sd1)
+							F.Intrinsic.String.Concat(V.Local.sd1," from BOM_ENG  ",V.Local.sd1)
+							F.Intrinsic.String.Concat(V.Local.sd1," where PART='",V.local.spart,"' ",V.ambient.newline,V.Local.sd1)
+							F.ODBC.Connection!con.execute(V.Local.SD1)
+						f.Intrinsic.Control.Catch
+							'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+						f.Intrinsic.Control.EndTry
+					F.Intrinsic.Control.EndIf
+					V.Local.squery.Set("")
+					F.ODBC.con!rsBOMStart.MoveNext
+				F.Intrinsic.Control.Loop
+				'Delete BOM MSTR
+				f.Intrinsic.Control.Try
+					F.Intrinsic.String.Concat("DELETE ","",V.Local.sd0)
+					F.Intrinsic.String.Concat(V.Local.sd0," from BOM_MSTR",V.local.sd0)
+					F.Intrinsic.String.Concat(V.Local.sd0," where parent='",V.global.sparent,"'",V.Local.sd0)
+					F.Intrinsic.String.Concat(V.Local.sd0," AND part='",V.local.spart,"';",V.Local.sd0)
+					F.ODBC.Connection!con.execute(V.Local.SD0)
+					'F.Intrinsic.String.Concat(V.Local.squery," AND A.PARENT<>B.PART",V.Local.squery)
+					V.Local.squery.Set("")
+				f.Intrinsic.Control.Catch
+					'f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+				f.Intrinsic.Control.EndTry
+				F.ODBC.con!rsBOMStart.Close
+				F.Intrinsic.String.concat(V.Local.sd0,V.Local.sd1,V.Local.smsg)
+				F.ODBC.Connection!con.Execute(V.Local.smsg)
+		F.intrinsic.control.endif
+	F.Intrinsic.Control.Next(V.Local.i)
+F.Intrinsic.Control.EndIf
+
+f.Intrinsic.Control.CallSub(main)
+F.Intrinsic.UI.CloseWaitDialog
+
+
+Program.Sub.cmddelete_click.End
+
+Program.Sub.frmpartbomrouterdelete_unload.Start
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.End
+
+Program.Sub.frmpartbomrouterdelete_unload.End
+
+Program.Sub.gsgcParts_RowCellClick.Start
+v.Local.stemp.Declare(string)
+v.Local.stemp2.Declare(string,"")
+v.Local.sparams.Declare(string)
+
+f.Intrinsic.Control.SelectCase(v.Args.column)
+	f.Intrinsic.Control.case("PART")
+		Gui.frmPartBomRouterDelete.gsgcParts.getcellValue("gv",1,v.Args.RowIndex,v.Local.stemp)
+		F.Intrinsic.String.Build("{0}!*!{1}!*!O",V.Local.stemp,V.Local.stemp2,V.Local.sParams)
+		F.Global.General.CallWrapperASync(300011,V.Local.sParams)
+	f.Intrinsic.Control.case("QTY_ONHAND")
+		f.Global.General.CallWrapperAsync(50,"INV516GI")
+f.Intrinsic.Control.EndSelect
+	
+Program.Sub.gsgcParts_RowCellClick.End
+
+Program.Sub.cmdCheckAll_Click.Start
+v.Local.irows.Declare(long)
+V.Local.iRows.Set(0)
+v.Local.i.Declare(long)
+gui.frmPartBomRouterDelete.gsgcParts.GetRowCount("GV",V.Local.irows)
+f.Intrinsic.Math.Sub(v.Local.iRows,1,v.Local.iRows)
+F.Intrinsic.Control.For(V.Local.i,0,V.local.iRows,1)
+	f.Data.DataTable.SetValue("dt",v.Local.i,"Select",true)
+f.Intrinsic.Control.Next(v.Local.i)
+Program.Sub.cmdCheckAll_Click.End
+
+Program.Sub.cmdUncheckAll_Click.Start
+v.Local.irows.Declare(long)
+V.Local.iRows.Set(0)
+v.Local.i.Declare(long)
+gui.frmPartBomRouterDelete.gsgcParts.GetRowCount("GV",V.Local.irows)
+f.Intrinsic.Math.Sub(v.Local.iRows,1,v.Local.iRows)
+F.Intrinsic.Control.For(V.Local.i,0,V.local.iRows,1)
+	f.Data.DataTable.SetValue("dt",v.Local.i,"Select",false)
+f.Intrinsic.Control.Next(v.Local.i)
+Program.Sub.cmdUncheckAll_Click.End
+
+
+
+
+
+Program.Sub.Comments.Start
+${$0$}$CON_PART_BOM_ROUTER_DELETE$}$SUPERVSR$}$26/11/2015
+Program.Sub.Comments.End
+
